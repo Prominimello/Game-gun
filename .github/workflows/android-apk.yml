@@ -19,7 +19,9 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
+      # ubuntu-latest runners ship with the Android SDK (ANDROID_HOME); accept licenses for any extra packages AGP fetches.
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       # Signing key. Uses repository secrets if configured (recommended, permanent key):
       #   BP_KEYSTORE_BASE64, BP_KEYSTORE_PASSWORD, BP_KEY_ALIAS, BP_KEY_PASSWORD

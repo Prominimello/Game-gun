@@ -87,7 +87,10 @@ public sealed class BreachpointGame : Game
     {
         base.Initialize();
         TouchPanel.EnabledGestures = GestureType.None;
+#if !ANDROID
+        // Desktop keyboard text entry (Android uses the platform's on-screen keyboard dialog instead).
         Window.TextInput += (_, e) => Input.TextChars.Add(e.Character);
+#endif
         Window.ClientSizeChanged += (_, _) => { };
     }
 

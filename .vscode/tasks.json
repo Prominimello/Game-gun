@@ -1,0 +1,79 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "detail": "Build the desktop game (Debug)",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "${workspaceFolder}/src/Breachpoint.Desktop/Breachpoint.Desktop.csproj", "/property:GenerateFullPaths=true", "/consoleloggerparameters:NoSummary"],
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "run",
+      "detail": "Build and run the desktop game",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "${workspaceFolder}/src/Breachpoint.Desktop/Breachpoint.Desktop.csproj"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "test",
+      "detail": "Run the unit tests",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["test", "${workspaceFolder}/tests/Breachpoint.Core.Tests/Breachpoint.Core.Tests.csproj"],
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "test", "isDefault": true }
+    },
+    {
+      "label": "publish: windows",
+      "detail": "Self-contained Windows build in ./artifacts/win-x64",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["publish", "${workspaceFolder}/src/Breachpoint.Desktop", "-c", "Release", "-r", "win-x64", "--self-contained", "true", "-o", "${workspaceFolder}/artifacts/win-x64"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish: linux",
+      "detail": "Self-contained Linux build in ./artifacts/linux-x64",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["publish", "${workspaceFolder}/src/Breachpoint.Desktop", "-c", "Release", "-r", "linux-x64", "--self-contained", "true", "-o", "${workspaceFolder}/artifacts/linux-x64"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "android: install workload",
+      "detail": "One-time: installs the .NET Android workload (needs admin/sudo on some systems)",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["workload", "install", "android"],
+      "problemMatcher": []
+    },
+    {
+      "label": "android: build apk",
+      "detail": "Debug-signed APK in ./artifacts/android (requires Android workload + SDK)",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["publish", "${workspaceFolder}/src/Breachpoint.Android", "-c", "Release", "-f", "net8.0-android", "-o", "${workspaceFolder}/artifacts/android"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "android: install on phone",
+      "detail": "Builds and installs on a USB-connected phone with USB debugging enabled",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "${workspaceFolder}/src/Breachpoint.Android", "-t:Install", "-f", "net8.0-android"],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "autotest",
+      "detail": "Plays through every screen and saves screenshots to ./screenshots",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["run", "--project", "${workspaceFolder}/src/Breachpoint.Desktop", "--", "--autotest", "${workspaceFolder}/screenshots"],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

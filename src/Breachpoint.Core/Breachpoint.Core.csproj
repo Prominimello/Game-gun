@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Platform-independent game rules: data, profile, map generation, simulation. No MonoGame dependency. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Breachpoint.Core</RootNamespace>
+  </PropertyGroup>
+</Project>

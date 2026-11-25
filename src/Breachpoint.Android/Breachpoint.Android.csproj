@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Android build. Requires the .NET Android workload:  dotnet workload install android
+    Build an APK:  dotnet publish src/Breachpoint.Android -c Release
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Breachpoint.Android</RootNamespace>
+    <AssemblyName>Breachpoint</AssemblyName>
+    <ApplicationId>com.breachpoint.taskforce</ApplicationId>
+    <ApplicationTitle>Breachpoint</ApplicationTitle>
+    <ApplicationVersion Condition="'$(ApplicationVersion)' == ''">1</ApplicationVersion>
+    <ApplicationDisplayVersion Condition="'$(ApplicationDisplayVersion)' == ''">1.0</ApplicationDisplayVersion>
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <AndroidUseAapt2>true</AndroidUseAapt2>
+    <DefineConstants>$(DefineConstants);ANDROID</DefineConstants>
+    <!-- smaller APK: one runtime per ABI that phones actually use -->
+    <RuntimeIdentifiers>android-arm64;android-arm;android-x64</RuntimeIdentifiers>
+    <AndroidLinkMode Condition="'$(Configuration)' == 'Release'">SdkOnly</AndroidLinkMode>
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.Android" Version="3.8.4" />
+    <PackageReference Include="FontStashSharp.MonoGame" Version="1.3.9" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Breachpoint.Core\Breachpoint.Core.csproj" />
+    <Compile Include="..\Breachpoint.Game\**\*.cs" LinkBase="Game" />
+    <EmbeddedResource Include="..\Breachpoint.Game\Assets\*.ttf" LogicalName="Breachpoint.Assets.%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

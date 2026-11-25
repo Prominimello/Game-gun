@@ -1,0 +1,13 @@
+{
+  "dotnet.defaultSolution": "Breachpoint.sln",
+  "editor.formatOnSave": false,
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "omnisharp.enableEditorConfigSupport": true
+}

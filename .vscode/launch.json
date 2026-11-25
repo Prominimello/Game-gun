@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Play Breachpoint (Desktop)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Breachpoint.Desktop/bin/Debug/net8.0/Breachpoint.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/Breachpoint.Desktop/bin/Debug/net8.0",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Autotest (screenshots)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Breachpoint.Desktop/bin/Debug/net8.0/Breachpoint.dll",
+      "args": ["--autotest", "${workspaceFolder}/screenshots"],
+      "cwd": "${workspaceFolder}/src/Breachpoint.Desktop/bin/Debug/net8.0",
+      "console": "internalConsole"
+    }
+  ]
+}

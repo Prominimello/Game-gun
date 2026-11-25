@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Desktop build (Windows / Linux / macOS) using MonoGame DesktopGL. Shared game code lives in ../Breachpoint.Game. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Breachpoint</RootNamespace>
+    <AssemblyName>Breachpoint</AssemblyName>
+    <RollForward>Major</RollForward>
+    <PublishReadyToRun>false</PublishReadyToRun>
+    <TieredPGO>true</TieredPGO>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Icon.ico</ApplicationIcon>
+    <DefineConstants>$(DefineConstants);DESKTOP</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" />
+    <PackageReference Include="FontStashSharp.MonoGame" Version="1.3.9" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Breachpoint.Core\Breachpoint.Core.csproj" />
+    <Compile Include="..\Breachpoint.Game\**\*.cs" LinkBase="Game" />
+    <EmbeddedResource Include="..\Breachpoint.Game\Assets\*.ttf" LogicalName="Breachpoint.Assets.%(Filename)%(Extension)" />
+    <!-- MonoGame DesktopGL looks for an embedded Icon.bmp for the window icon -->
+    <EmbeddedResource Include="Icon.bmp" LogicalName="Icon.bmp" />
+    <None Include="Icon.ico" />
+  </ItemGroup>
+</Project>

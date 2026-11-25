@@ -144,3 +144,76 @@ table.t tr:hover td{background:#141c25}
 #replay-ui{position:absolute;left:0;right:0;bottom:0;background:rgba(10,14,18,.9);border-top:1px solid var(--line);padding:8px 14px;display:flex;gap:10px;align-items:center}
 #replay-ui input[type=range]{flex:1}
 .rec{color:var(--red);font-weight:700;letter-spacing:.2em}
+
+/* ===================== Mobile / touch ===================== */
+html,body{touch-action:manipulation;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+#game,#replay-canvas,#title-bg{touch-action:none}
+.hq-main,.brief-right,.brief-info,#scr-debrief,.modal-box,.scroll{-webkit-overflow-scrolling:touch}
+.hud-touch{display:none}
+.hud-objtoggle{display:none}
+#scr-mission.touch .hud-touch{display:flex;position:absolute;left:50%;transform:translateX(-50%);top:50px;gap:4px;background:rgba(10,14,18,.85);border:1px solid var(--line);padding:4px}
+#scr-mission.touch .hud-touch button{padding:7px 10px;font-size:12px}
+#scr-mission.touch .ctxmenu button{padding:11px 14px;font-size:14px}
+#scr-mission.touch .hud-cmd button{padding:9px 8px}
+
+@media (max-width: 1000px), (max-height: 560px) {
+  body{font-size:13px}
+  /* title */
+  .title-wrap{left:5%;top:8%}
+  .logo{font-size:40px}.logo span{font-size:15px;letter-spacing:.4em}
+  .tagline{margin:10px 0 16px}
+  .menu{width:260px}.menu button{padding:10px 14px;font-size:13px}
+  .foot{margin-top:14px}
+  /* HQ: nav becomes a horizontal strip */
+  .topbar{height:auto;min-height:44px;flex-wrap:wrap;gap:8px;padding:4px 10px}
+  .tb-stats{gap:10px;font-size:11px;flex-wrap:wrap}
+  .hq-nav{top:var(--tb,44px);bottom:auto;width:auto;right:0;height:44px;display:flex;overflow-x:auto;padding:0;border-right:none;border-bottom:1px solid var(--line)}
+  .hq-nav button{display:inline-block;width:auto;white-space:nowrap;padding:12px 14px;border-left:none;border-bottom:3px solid transparent}
+  .hq-nav button.active{border-bottom-color:var(--acc)}
+  .hq-nav .nav-sub{display:none}
+  .hq-main{left:0;top:calc(var(--tb,44px) + 44px);padding:10px}
+  .grid4,.grid3{grid-template-columns:1fr 1fr}
+  .grid2,.split{grid-template-columns:1fr}
+  .split{height:auto}
+  .op-list.scroll{max-height:none!important}
+  table.t{font-size:11px}
+  .modal-box{min-width:0;max-width:96vw;max-height:94vh;padding:12px}
+  /* briefing stacks vertically */
+  #scr-brief{display:block;overflow:auto}
+  .brief-left{height:auto;display:block}
+  .brief-left canvas{display:block;height:60vh}
+  .brief-info{max-height:none}
+  .brief-right{overflow:visible}
+  #scr-debrief{padding:12px}
+  .rank-big{font-size:72px}.rank-big.fail{font-size:40px}
+  .score-row{grid-template-columns:130px 1fr 44px}
+  /* mission HUD compact */
+  .hud-top{top:4px;padding:3px 6px;gap:5px;flex-wrap:wrap;max-width:calc(100vw - 16px);justify-content:center}
+  .hud-top .clock{font-size:13px;min-width:44px}
+  .hud-top button{padding:5px 8px;font-size:11px}
+  .hud-obj{display:none;top:auto;bottom:86px;width:240px;font-size:11px;z-index:5}
+  #scr-mission.obj-open .hud-obj{display:block}
+  .hud-objtoggle{display:block;position:absolute;left:8px;bottom:84px;font-size:11px;padding:6px 8px}
+  #scr-mission.obj-open .hud-objtoggle{bottom:auto;top:auto}
+  .hud-floor{left:4px;top:4px;flex-direction:row}
+  .hud-log{width:220px;max-height:64px;top:auto;bottom:84px;right:4px;font-size:10px;opacity:.85}
+  .hud-ops{left:4px;right:4px;bottom:4px;gap:3px;overflow-x:auto}
+  .opcard{width:118px;min-width:118px;padding:3px}
+  .opcard .nm{font-size:11px}.opcard .nm .dim{display:none}
+  .opcard .ammo{font-size:9px}.opcard .ammo .dim{display:none}
+  .hud-cmd{display:none;bottom:84px;right:4px;grid-template-columns:repeat(4,auto)}
+  #scr-mission.cmd-open .hud-cmd{display:grid}
+  #scr-mission.cmd-open .hud-log{display:none}
+  .hud-cmd kbd{display:none}
+  #scr-mission.touch .hud-touch{flex-direction:column;left:4px;top:44px;bottom:auto;transform:none}
+  #scr-mission.touch .hud-touch button{padding:6px 8px;font-size:11px}
+  .hud-objtoggle{left:auto;right:4px;bottom:auto;top:44px}
+  .hud-obj{left:auto;right:4px;bottom:auto;top:76px}
+  .hud-log{top:auto;bottom:70px}
+  .hud-help{top:40px;max-height:70vh;overflow:auto}
+  #replay-ui{flex-wrap:wrap;gap:6px;padding:6px}
+  #replay-ui select{max-width:150px}
+}
+@media (max-width: 1000px) and (min-height: 561px){ .hud-cmd{display:grid} }
+
+.brief-deploy{position:sticky;bottom:0;background:var(--bg);padding:8px 0;border-top:1px solid var(--line);z-index:2}

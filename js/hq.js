@@ -18,6 +18,7 @@ BP.hq = (() => {
   function renderStats() {
     const p = P();
     const d = ST.diff();
+    requestAnimationFrame(() => { const tb = document.querySelector('.topbar'); if (tb) document.documentElement.style.setProperty('--tb', tb.offsetHeight + 'px'); });
     document.getElementById('hq-stats').innerHTML =
       `<span>${p.unitName}</span><span>Funds <b>${U.fmtMoney(p.money)}</b></span><span>Day <b>${p.day}</b></span><span>Tier <b>${ST.tier()}</b></span><span>Roster <b>${p.operators.length}</b></span><span>${d.name}${p.ironman ? ' · <b style="color:#d9534f">IRONMAN</b>' : ''}</span>`;
   }
@@ -339,9 +340,10 @@ BP.hq = (() => {
     const cv = el('canvas', { width: 1400, height: 520, style: 'width:100%;max-width:700px;height:auto;aspect-ratio:1400/520;background:radial-gradient(ellipse,#1d2833,#0a0e12);border:1px solid #26313d;cursor:grab' });
     const drawW = () => { const c = cv.getContext('2d'); c.clearRect(0, 0, cv.width, cv.height); c.strokeStyle = 'rgba(255,255,255,0.03)'; for (let i = 0; i < cv.width; i += 40) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i, cv.height); c.stroke(); } for (let i = 0; i < cv.height; i += 40) { c.beginPath(); c.moveTo(0, i); c.lineTo(cv.width, i); c.stroke(); } BP.art.weapon(c, w, cv.width / 2, cv.height / 2, wzoom * 1.6, yaw); c.fillStyle = 'rgba(200,210,220,0.5)'; c.font = '22px monospace'; c.fillText(`${b.name} · ${w.serial}`, 20, 34); };
     let dragX = null;
-    cv.onmousedown = e => { dragX = e.clientX; cv.style.cursor = 'grabbing'; };
-    window.onmouseup = () => { dragX = null; cv.style.cursor = 'grab'; };
-    cv.onmousemove = e => { if (dragX === null) return; yaw += (e.clientX - dragX) * 0.012; dragX = e.clientX; drawW(); };
+    cv.style.touchAction = 'none';
+    cv.onpointerdown = e => { dragX = e.clientX; cv.style.cursor = 'grabbing'; try { cv.setPointerCapture(e.pointerId); } catch (er) { } };
+    cv.onpointerup = cv.onpointercancel = () => { dragX = null; cv.style.cursor = 'grab'; };
+    cv.onpointermove = e => { if (dragX === null) return; yaw += (e.clientX - dragX) * 0.012; dragX = e.clientX; drawW(); };
     cv.onwheel = e => { e.preventDefault(); wzoom = U.clamp(wzoom * (e.deltaY < 0 ? 1.1 : 0.9), 1, 5); drawW(); };
     setTimeout(drawW, 0);
     col.append(el('div', { class: 'panel' }, el('div', { class: 'row sp' }, el('h2', {}, b.name), el('span', { class: 'dim' }, 'Drag to rotate · wheel to zoom')), cv,

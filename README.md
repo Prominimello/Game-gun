@@ -14,6 +14,14 @@ python3 -m http.server 8000
 
 Then browse to http://localhost:8000. The game saves to browser `localStorage`.
 
+## Android / mobile
+
+- **APK:** every push builds a signed APK with GitHub Actions (`.github/workflows/android-apk.yml`) and publishes it on the repository's **Releases** page ("Breachpoint for Android"). Download the `.apk` on an Android 7.0+ device, open it and allow installing from that source.
+- **Phone browser:** the web version is touch-enabled and can be added to the home screen (web app manifest included) when served over HTTPS.
+- **Touch controls:** tap an operator to select (toggle *Multi* to select several, *All* for the squad); tap ground, a door, a suspect or an item to order; long-press (or toggle *+Waypoint*) to queue waypoints; drag to pan, pinch to zoom, twist to rotate; *Orders* opens the command panel. The Android back button closes menus and pauses missions.
+- **Native wrapper:** `android/` is a minimal Java WebView app (fullscreen landscape, native text-to-speech for callouts, auto-pause when backgrounded). Build locally with `cd android && ./gradlew assembleDebug` (needs the Android SDK).
+- **Signing:** with no secrets configured, CI generates a key once and keeps it in the Actions cache. For a permanent key, add repository secrets `BP_KEYSTORE_BASE64`, `BP_KEYSTORE_PASSWORD`, `BP_KEY_ALIAS`, `BP_KEY_PASSWORD`.
+
 ## Game loop
 
 1. **HQ → Command Center**: pick a campaign operation, a daily operation, the weekly challenge, or build a **Sandbox** mission.

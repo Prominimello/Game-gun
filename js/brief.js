@@ -63,7 +63,7 @@ BP.brief = (() => {
     right.append(el('div', { class: 'panel' }, el('h3', {}, 'Supplies'),
       el('div', { style: 'font-size:12px' }, Object.entries(need).map(([k, n]) => `${D.ITEM[k].name}: ${n} needed / ${p.stock[k] || 0} in stock`).join(' · ') || 'No consumables assigned.'),
       short.length || toolShort.length ? el('div', { class: 'red', style: 'font-size:12px;margin-top:4px' }, 'Shortage: ' + [...short, ...toolShort].map(([k]) => D.ITEM[k].name).join(', ') + ' — excess will be removed from loadouts at deployment.') : ''));
-    right.append(el('div', { class: 'row', style: 'margin-top:auto' },
+    right.append(el('div', { class: 'row brief-deploy', style: 'margin-top:auto' },
       el('button', { onclick: () => { BP.hq.show(); } }, '◀ Back to HQ'),
       el('button', { class: 'primary grow', disabled: !squad.length, onclick: deploy }, `DEPLOY ${squad.length} OPERATOR${squad.length === 1 ? '' : 'S'} ▶`)));
     root.append(right);

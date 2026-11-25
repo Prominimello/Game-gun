@@ -300,7 +300,15 @@ BP.audio = (() => {
   // ---------- Voice (speech synthesis with radio squelch) ----------
   let lastSpeak = 0;
   function say(text, { pitch = 1, rate = 1.15, prio = false, radio = true } = {}) {
-    if (!settings.voice || !window.speechSynthesis) return;
+    if (!settings.voice) return;
+    if (window.AndroidTTS) { // native text-to-speech bridge provided by the Android app
+      const nowMs = performance.now();
+      if (!prio && nowMs - lastSpeak < 900) return;
+      lastSpeak = nowMs; if (radio) S.radio();
+      try { window.AndroidTTS.speak(String(text), pitch, rate, prio, 0.8 * settings.master); } catch (e) { }
+      return;
+    }
+    if (!window.speechSynthesis) return;
     const nowMs = performance.now();
     if (speechSynthesis.speaking) { if (!prio) return; speechSynthesis.cancel(); }
     if (!prio && nowMs - lastSpeak < 900) return;

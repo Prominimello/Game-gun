@@ -18,9 +18,11 @@ BP.replay = (() => {
     running = true; lastT = performance.now();
     canvas.onwheel = e => { e.preventDefault(); cam.zoom = U.clamp(cam.zoom * (e.deltaY < 0 ? 1.12 : 0.89), 0.2, 3); };
     let drag = null;
-    canvas.onmousedown = e => drag = { x: e.clientX, y: e.clientY };
-    window.addEventListener('mouseup', () => drag = null);
-    canvas.onmousemove = e => { if (!drag || follow >= 0) return; const c = Math.cos(-cam.rot), s = Math.sin(-cam.rot); const dx = (drag.x - e.clientX) / cam.zoom, dy = (drag.y - e.clientY) / cam.zoom; cam.x += dx * c - dy * s; cam.y += dx * s + dy * c; drag = { x: e.clientX, y: e.clientY }; };
+    const pts = new Map(); let pinch = null;
+    canvas.onpointerdown = e => { pts.set(e.pointerId, [e.clientX, e.clientY]); try { canvas.setPointerCapture(e.pointerId); } catch (er) { } if (pts.size === 1) drag = { x: e.clientX, y: e.clientY }; else { drag = null; const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: cam.zoom }; } };
+    canvas.onpointerup = canvas.onpointercancel = e => { pts.delete(e.pointerId); drag = null; pinch = null; };
+    canvas.addEventListener('pointermove', e => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, [e.clientX, e.clientY]); if (pinch && pts.size >= 2) { const [a, b] = [...pts.values()]; cam.zoom = U.clamp(pinch.z * Math.hypot(a[0] - b[0], a[1] - b[1]) / Math.max(10, pinch.d), 0.2, 3); } });
+    canvas.onpointermove = e => { if (!drag || follow >= 0) return; const c = Math.cos(-cam.rot), s = Math.sin(-cam.rot); const dx = (drag.x - e.clientX) / cam.zoom, dy = (drag.y - e.clientY) / cam.zoom; cam.x += dx * c - dy * s; cam.y += dx * s + dy * c; drag = { x: e.clientX, y: e.clientY }; };
     requestAnimationFrame(loop);
   }
   function buildUI() {
@@ -204,3 +206,15 @@ BP.main = (() => {
   return { screen, title, startMission, boot, settings };
 })();
 window.addEventListener('load', () => BP.main.boot());
+// Called by the Android wrapper when the hardware back button is pressed. Returns true if handled.
+window.bpBack = () => {
+  const modal = document.getElementById('modal');
+  if (!modal.classList.contains('hidden')) { modal.classList.add('hidden'); return true; }
+  const menu = document.querySelector('.ctxmenu'); if (menu) { menu.remove(); return true; }
+  const vis = id => !document.getElementById(id).classList.contains('hidden');
+  if (vis('scr-mission')) { window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape' })); if (BP.sim.M && BP.sim.M.phase === 'live' && !BP.sim.M.paused) window.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space' })); return true; }
+  if (vis('scr-brief')) { BP.hq.show(); return true; }
+  if (vis('scr-replay')) { const b = [...document.querySelectorAll('#replay-ui button')].find(x => x.textContent.includes('Exit')); if (b) b.click(); return true; }
+  if (vis('scr-hq')) { BP.state.save(); BP.main.title(); return true; }
+  return false;
+};

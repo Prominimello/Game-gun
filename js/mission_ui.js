@@ -2,6 +2,7 @@
 'use strict';
 BP.missionUI = (() => {
   const TS = BP.TS, T = BP.T, U = BP.util, D = BP.D, sim = BP.sim, R = BP.render;
+  let touch = { pts: new Map(), start: null, lp: null, pinch: null, append: false, multi: false }, isTouch = false;
   let canvas, ctx, hud, M = null, cam, scene, selected = [], floorView = 0, running = false, keys = {}, drag = null, mode = null, menu = null, lastT = 0, lockCam = false, mouse = { x: 0, y: 0, wx: 0, wy: 0 }, hudT = 0, visT = 0, onEnd = null, vehicle = null, help = false, banner = null, bannerT = 0, lastLogLen = 0, dpr = 1;
   const S = () => BP.audio.S;
 
@@ -65,11 +66,95 @@ BP.missionUI = (() => {
     canvas.addEventListener('mousedown', handlers.md); window.addEventListener('mouseup', handlers.mu); window.addEventListener('mousemove', handlers.mm);
     canvas.addEventListener('wheel', handlers.wh, { passive: false }); window.addEventListener('keydown', handlers.kd); window.addEventListener('keyup', handlers.ku);
     canvas.addEventListener('contextmenu', handlers.cm); window.addEventListener('resize', handlers.rs);
+    handlers.ts = e => onTouchStart(e); handlers.tm = e => onTouchMove(e); handlers.te = e => onTouchEnd(e);
+    canvas.addEventListener('touchstart', handlers.ts, { passive: false }); canvas.addEventListener('touchmove', handlers.tm, { passive: false });
+    canvas.addEventListener('touchend', handlers.te, { passive: false }); canvas.addEventListener('touchcancel', handlers.te, { passive: false });
   }
   function unbind() {
     canvas.removeEventListener('mousedown', handlers.md); window.removeEventListener('mouseup', handlers.mu); window.removeEventListener('mousemove', handlers.mm);
     canvas.removeEventListener('wheel', handlers.wh); window.removeEventListener('keydown', handlers.kd); window.removeEventListener('keyup', handlers.ku);
     canvas.removeEventListener('contextmenu', handlers.cm); window.removeEventListener('resize', handlers.rs);
+    canvas.removeEventListener('touchstart', handlers.ts); canvas.removeEventListener('touchmove', handlers.tm);
+    canvas.removeEventListener('touchend', handlers.te); canvas.removeEventListener('touchcancel', handlers.te);
+  }
+
+  // ---------- touch input ----------
+  // 1 finger: tap operator = select, tap ground/door/target = order (like right-click), drag = pan, long-press = add waypoint.
+  // 2 fingers: pinch = zoom, twist = rotate, drag = pan.
+  function tpos(t) { const r = canvas.getBoundingClientRect(); return [t.clientX - r.left, t.clientY - r.top]; }
+  function onTouchStart(e) {
+    e.preventDefault(); BP.audio.init(); closeMenu();
+    if (!isTouch) { isTouch = true; document.getElementById('scr-mission').classList.add('touch'); buildTouchBar(); }
+    for (const t of e.changedTouches) touch.pts.set(t.identifier, tpos(t));
+    clearTimeout(touch.lp);
+    if (touch.pts.size === 1) {
+      const [x, y] = [...touch.pts.values()][0];
+      touch.start = { x, y, t: performance.now(), moved: false, world: screenToWorld(x, y) };
+      mouse.x = x; mouse.y = y; [mouse.wx, mouse.wy] = screenToWorld(x, y);
+      touch.lp = setTimeout(() => { if (touch.start && !touch.start.moved && touch.pts.size === 1) { touch.start.used = true; if (navigator.vibrate) navigator.vibrate(25); tapAction(touch.start.x, touch.start.y, true); } }, 480);
+    } else if (touch.pts.size === 2) {
+      touch.start = null;
+      const [a, b] = [...touch.pts.values()];
+      touch.pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), ang: Math.atan2(b[1] - a[1], b[0] - a[0]), zoom: cam.zoom, rot: cam.tRot, mid: screenToWorld((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) };
+    }
+  }
+  function onTouchMove(e) {
+    e.preventDefault();
+    for (const t of e.changedTouches) if (touch.pts.has(t.identifier)) touch.pts.set(t.identifier, tpos(t));
+    if (touch.pts.size === 1 && touch.start) {
+      const [x, y] = [...touch.pts.values()][0];
+      if (!touch.start.moved && Math.hypot(x - touch.start.x, y - touch.start.y) > 12) { touch.start.moved = true; clearTimeout(touch.lp); }
+      if (touch.start.moved) { const [ax, ay] = touch.start.world; const [bx, by] = screenToWorld(x, y); cam.x += ax - bx; cam.y += ay - by; }
+      mouse.x = x; mouse.y = y; [mouse.wx, mouse.wy] = screenToWorld(x, y);
+    } else if (touch.pts.size >= 2 && touch.pinch) {
+      const [a, b] = [...touch.pts.values()];
+      const d = Math.hypot(a[0] - b[0], a[1] - b[1]), ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      cam.zoom = U.clamp(touch.pinch.zoom * d / Math.max(10, touch.pinch.d), 0.35, 3);
+      const dr = U.angNorm(ang - touch.pinch.ang);
+      if (Math.abs(dr) > 0.15) { cam.tRot = touch.pinch.rot + dr; cam.rot = cam.tRot; }
+      const [mx, my] = screenToWorld((a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+      cam.x += touch.pinch.mid[0] - mx; cam.y += touch.pinch.mid[1] - my;
+    }
+  }
+  function onTouchEnd(e) {
+    e.preventDefault();
+    clearTimeout(touch.lp);
+    const st = touch.start;
+    for (const t of e.changedTouches) touch.pts.delete(t.identifier);
+    if (touch.pts.size < 2) touch.pinch = null;
+    if (touch.pts.size === 1) { const [x, y] = [...touch.pts.values()][0]; touch.start = { x, y, t: performance.now(), moved: true, world: screenToWorld(x, y) }; return; }
+    if (!st || st.moved || st.used || e.type === 'touchcancel') { touch.start = null; return; }
+    touch.start = null;
+    tapAction(st.x, st.y, false);
+  }
+  function tapAction(x, y, long) {
+    const [wx, wy] = screenToWorld(x, y);
+    if (mode) { doThrow(wx, wy, touch.append || long); if (!touch.append) mode = null; updateTouchBar(); return; }
+    const u = ops().find(o => o.floor === floorView && Math.hypot(o.x - wx, o.y - wy) < 22);
+    if (u && !long) {
+      if (touch.multi) selected = selected.includes(u) ? selected.filter(s => s !== u) : [...selected, u];
+      else selected = [u];
+      S().ui(); return;
+    }
+    if (!sel().length) return;
+    rightClick(wx, wy, touch.append || long, x, y, false);
+  }
+  function buildTouchBar() {
+    const old = document.getElementById('h-touch'); if (old) old.remove();
+    const el = BP.util.el;
+    const bar = el('div', { class: 'hud-touch', id: 'h-touch' },
+      el('button', { id: 't-all', onclick: () => { selected = ops().filter(sim.canAct); S().ui(); } }, 'All'),
+      el('button', { id: 't-multi', onclick: () => { touch.multi = !touch.multi; updateTouchBar(); } }, 'Multi'),
+      el('button', { id: 't-wp', onclick: () => { touch.append = !touch.append; updateTouchBar(); } }, '+Waypoint'),
+      el('button', { id: 't-cam', onclick: () => { lockCam = !lockCam; updateTouchBar(); } }, 'Cam Lock'),
+      el('button', { id: 't-cmd', onclick: () => { document.getElementById('scr-mission').classList.toggle('cmd-open'); updateTouchBar(); } }, 'Orders ▴'));
+    hud.append(bar); updateTouchBar();
+  }
+  function updateTouchBar() {
+    const t = id => document.getElementById(id);
+    if (!t('h-touch')) return;
+    t('t-multi').className = touch.multi ? 'on' : ''; t('t-wp').className = touch.append ? 'on' : ''; t('t-cam').className = lockCam ? 'on' : '';
+    t('t-cmd').className = document.getElementById('scr-mission').classList.contains('cmd-open') ? 'on' : '';
   }
   function onMouseMove(e) {
     const r = canvas.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
@@ -264,12 +349,14 @@ BP.missionUI = (() => {
     const cb = el('div', { class: 'hud-cmd' });
     for (const [n, k, fn] of cmds) cb.append(el('button', { onclick: () => { fn(); S().ui(); } }, n, el('kbd', {}, k)));
     hud.append(cb);
+    hud.append(el('button', { class: 'hud-objtoggle', onclick: () => document.getElementById('scr-mission').classList.toggle('obj-open') }, 'Objectives'));
+    if (isTouch) buildTouchBar();
     buildHelp();
   }
   function buildHelp() {
     const old = document.getElementById('h-help'); if (old) old.remove();
     if (!help) return;
-    hud.append(BP.util.el('div', { class: 'hud-help', id: 'h-help', html: `<b class="acc">CONTROLS</b><br>
+    hud.append(BP.util.el('div', { class: 'hud-help', id: 'h-help', html: `<b class="acc">TOUCH</b><br><b>Tap operator</b> select (Multi toggle to add) · <b>Tap ground/door/suspect/item</b> give order · <b>Long-press</b> add waypoint · <b>Drag</b> pan · <b>Pinch</b> zoom · <b>Twist</b> rotate · <b>Orders</b> button opens the command panel<br><br><b class="acc">CONTROLS</b><br>
       <b>LMB</b> select / drag-box · <b>1–8</b> select operator (twice = center)<br>
       <b>RMB</b> move · <b>Shift+RMB</b> add waypoint · <b>RMB-drag</b> move + facing<br>
       <b>RMB door</b> breach menu · <b>RMB suspect/civ/item/teammate</b> arrest / secure / collect / treat<br>

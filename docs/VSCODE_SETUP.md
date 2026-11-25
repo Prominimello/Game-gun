@@ -154,6 +154,7 @@ Keep the `.jks` file private. It is listed in `.gitignore` so it never gets comm
 | Black window or crash on start (old PCs / VMs) | Update graphics drivers; the game needs OpenGL 3.0 |
 | No voice callouts on Windows | Voice uses Windows' built-in speech (PowerShell `System.Speech`). Toggle it in **Settings → Voice callouts**. |
 | Android build: "workload not installed" | `dotnet workload install android` from an admin terminal |
+| Android build: `NETSDK1202 ... net8.0-android is out of support` | You have a newer .NET SDK installed too. In the repo folder run `dotnet new globaljson --sdk-version 8.0.400 --roll-forward latestFeature` (use your 8.0 version from `dotnet --list-sdks`), then install the workload again |
 
 ## macOS / Linux notes
 

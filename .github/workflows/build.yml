@@ -75,6 +75,12 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - name: Pin .NET 8 SDK (newer preinstalled SDKs reject net8.0-android)
+        run: |
+          SDK=$(dotnet --list-sdks | awk '/^8\./{print $1}' | sort -V | tail -1)
+          echo "Using SDK $SDK"
+          dotnet new globaljson --sdk-version "$SDK" --roll-forward latestPatch --force
+          dotnet --version
       - name: Install .NET Android workload
         run: dotnet workload install android
       - name: Accept Android SDK licenses
